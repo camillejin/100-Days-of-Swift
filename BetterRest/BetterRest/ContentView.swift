@@ -11,9 +11,11 @@ struct ContentView: View {
     @State private var sleepAmount = 8.0
     @State private var coffeeAmount = 1
     
+    /*
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var showingAlert = false
+     */
     
     static var defaultWakeTime: Date {
         var components = DateComponents()
@@ -24,30 +26,39 @@ struct ContentView: View {
     
     var body: some View {
         NavigationView {
-            Form {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("When do you want to wake up?")
-                        .font(.headline)
+            VStack {
+                Form {
+                    Section {
+                        DatePicker("Please enter a time", selection: $wakeUp, displayedComponents: .hourAndMinute)
+                            .labelsHidden()
+                    } header: {
+                        Text("When do you want to wake up?")
+                            .font(.headline)
+                    }
                     
-                    DatePicker("Please enter a time", selection: $wakeUp, displayedComponents: .hourAndMinute)
-                        .labelsHidden()
+                    Section {
+                        Stepper("\(sleepAmount.formatted()) hours", value: $sleepAmount, in: 4...12, step: 0.25)
+                    } header: {
+                        Text("Desired amount of sleep")
+                            .font(.headline)
+                    }
+                    
+                    Section {
+                        Picker("Number of cups", selection: $coffeeAmount) {
+                            ForEach(1..<21) {
+                                Text("\($0) cups")
+                            }
+                        }
+                    } header: {
+                        Text("Daily coffee intake")
+                            .font(.headline)
+                    }
                 }
                 
-                VStack(alignment: .leading, spacing: 0) {
-                    
-                    Text("Desired amount of sleep")
-                        .font(.headline)
-                    
-                    Stepper("\(sleepAmount.formatted()) hours", value: $sleepAmount, in: 4...12, step: 0.25)
-                }
+                Text("Recommended Bedtime: \(sleepTime)")
                 
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Daily coffee intake")
-                        .font(.headline)
-                    
-                    Stepper(coffeeAmount == 1 ? "1 cup" : "\(coffeeAmount) cups", value: $coffeeAmount, in: 1...20)
-                }
             }
+            /*
             .navigationTitle("BetterRest")
             .toolbar {
                 Button("Calculate", action: calculateBedtime)
@@ -57,10 +68,11 @@ struct ContentView: View {
             } message: {
                 Text(alertMessage)
             }
+             */
         }
     }
     
-    func calculateBedtime() {
+    var sleepTime: String {
         do {
             let config = MLModelConfiguration()
             let model = try SleepCalculator(configuration: config)
@@ -71,18 +83,21 @@ struct ContentView: View {
             
             let prediction = try model.prediction(wake: Double(hour + minute), estimatedSleep: sleepAmount, coffee: Double(coffeeAmount))
             
-            let sleepTime = wakeUp - prediction.actualSleep
+            return (wakeUp - prediction.actualSleep).formatted(date: .omitted, time: .shortened)
             
-            alertTitle = "Your ideal bedtime is..."
-            alertMessage = sleepTime.formatted(date: .omitted, time: .shortened)
+            // alertTitle = "Your ideal bedtime is..."
+            // alertMessage = sleepTime.formatted(date: .omitted, time: .shortened)
             
             // More code to come here
         } catch {
             // Something went wrong!
+            /*
             alertTitle = "Error"
             alertMessage = "Sorry, there was a problem calculating your bedtime."
+             */
+            return "Error Occurred"
         }
-        showingAlert = true
+        // showingAlert = true
     }
 }
 
