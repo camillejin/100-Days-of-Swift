@@ -5,25 +5,86 @@
 
 import SwiftUI
 
-struct User: Codable {
-    // Codable protocol - for archiving and unarchiving
-    
-    let firstName: String
-    let lastName: String
+struct fontColor: ViewModifier {
+    var currency: String
+    var amount: Double
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if (currency=="USD") {
+            if amount < 10 {
+                content.foregroundColor(.black)
+            }
+            else if amount < 100 {
+                content.foregroundColor(.purple)
+            }
+            else {
+                content.foregroundColor(.orange)
+            }
+        } else {
+            content.foregroundColor(.black)
+        }
+    }
 }
 
 struct ContentView: View {
-    @State private var user = User(firstName: "Taylor", lastName: "Swift")
+    @StateObject var expenses = Expenses()
+    @State private var showingAddExpense = false
     
     var body: some View {
-        Button("Save User") {
-            // when to archive and what to do with the data
-            let encoder = JSONEncoder()
-            
-            if let data = try? encoder.encode(user) {
-                UserDefaults.standard.set(data, forKey: "UserData")
+        NavigationView {
+                List {
+                    Section(header: Text("Personal")) {
+                        ForEach(expenses.items, id: \.id) { item in
+                            if (item.type == "Personal") {
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(item.name)
+                                            .font(.headline)
+                                            .modifier(fontColor(currency: item.currency, amount: item.amount))
+                                        Text(item.type)
+                                    }
+                                    Spacer()
+                                    Text(item.amount, format: .currency(code: item.currency))
+                                }
+                            }
+                        }
+                        .onDelete(perform: removeItems)
+                    }
+                    Section(header: Text("Business")) {
+                        ForEach(expenses.items, id: \.id) { item in
+                            if (item.type == "Business") {
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(item.name)
+                                            .font(.headline)
+                                            .modifier(fontColor(currency: item.currency, amount: item.amount))
+                                        Text(item.type)
+                                    }
+                                    Spacer()
+                                    Text(item.amount, format: .currency(code: item.currency))
+                                }
+                            }
+                        }
+                        .onDelete(perform: removeItems)
+                    }
+                }
+            .navigationTitle("iExpense")
+            .toolbar {
+                Button {
+                    showingAddExpense = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+            .sheet(isPresented: $showingAddExpense) {
+                AddView(expenses: expenses)
             }
         }
+    }
+    
+    func removeItems(at offsets: IndexSet) {
+        expenses.items.remove(atOffsets: offsets)
     }
 }
 
