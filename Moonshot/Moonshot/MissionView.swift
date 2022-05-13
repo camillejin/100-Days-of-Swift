@@ -13,6 +13,7 @@ struct MissionView: View {
     
     let mission: Mission
     let crew: [CrewMember]
+    let launchDate: String
     
     var body: some View {
         GeometryReader { geometry in
@@ -24,6 +25,8 @@ struct MissionView: View {
                         .frame(maxWidth: geometry.size.width * 0.6)
                         .padding(.top)
                 
+                    Text(launchDate)
+                        .padding()
                     
                     VStack(alignment: .leading) {
                         Rectangle()
@@ -95,6 +98,7 @@ struct MissionView: View {
                 fatalError("Missing \(member.name)")
             }
         }
+        self.launchDate = mission.formattedLaunchDate
     }
 }
 
